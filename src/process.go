@@ -1,12 +1,8 @@
 package src
 
-import (
-	"errors"
-	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
-)
+import "errors"
+import "fmt"
+import "regexp"
 
 type Date struct {
 	clock_in string
@@ -18,7 +14,7 @@ type Date struct {
 	last_description string
 }
 
-type Api struct {
+type Process struct {
 	clock_in *regexp.Regexp
 	task_line *regexp.Regexp
 	clock_out *regexp.Regexp
@@ -26,16 +22,16 @@ type Api struct {
 }
 
 // Constructor
-func MakeApi() Api {
-	return Api{
-		clock_in: compileRegex(`^\s*\| [0-9]{4}-[0-9]{2}-[0-9]{2} \|\s+IN\s+\|`),
-		task_line: compileRegex(`^\s*\| [0-9]{4}-[0-9]{2}-[0-9]{2} \| [0-9]{2}:[0-9]{2} \|`),
-		clock_out: compileRegex(`^\s*\| [0-9]{4}-[0-9]{2}-[0-9]{2} \|\s+OUT\s+\|`),
+func MakeProcess() Process {
+	return Process{
+		clock_in: Util.CompileRegex(`^\s*\|\s+[0-9]{4}-[0-9]{2}-[0-9]{2}\s+\|\s+IN\s+\|`),
+		task_line: Util.CompileRegex(`^\s*\|\s+[0-9]{4}-[0-9]{2}-[0-9]{2}\s+\|\s+[0-9]{2}:[0-9]{2}\s+\|`),
+		clock_out: Util.CompileRegex(`^\s*\|\s+[0-9]{4}-[0-9]{2}-[0-9]{2}\s+\|\s+OUT\s+\|`),
 		dates: make(map[string]Date),
 	}
 }
 
-func (self *Api) Process(line string, line_number int) string {
+func (self *Process) Process(line string, line_number int) string {
 	var err error
 	if self.clock_in.MatchString(line) {
 		err = self.parseClockIn(line, line_number)
@@ -52,34 +48,8 @@ func (self *Api) Process(line string, line_number int) string {
 
 // -----------------------------------------
 
-func compileRegex(pattern string) *regexp.Regexp {
-    regex, err := regexp.Compile(pattern)
-	assert(err)
-
-	return regex
-}
-
-func (self *Api) parseLine(line string, line_number int, size int) ([]string, error) {
-	var data []string = strings.Split(line, "|")
-
-	if len(data) != size + 2 {
-		return nil, errors.New("malformed line " + strconv.Itoa(line_number) + "\n" + line)
-	}
-
-	data = data[1:size + 1]
-	for i, value := range data {
-        data[i] = strings.TrimSpace(value)
-
-		if len(data[i]) == 0 {
-			return nil, errors.New("malformed line " + strconv.Itoa(line_number) + "\n" + line)
-		}
-	}
-
-	return data, nil
-}
-
-func (self *Api) parseClockIn(line string, line_number int) error {
-	data, err := self.parseLine(line, line_number, 4)
+func (self *Process) parseClockIn(line string, line_number int) error {
+	data, err := Util.ParseLine(line, line_number, 4)
 	if err != nil { return err }
 
 	// Set clock_in, location
@@ -91,8 +61,8 @@ func (self *Api) parseClockIn(line string, line_number int) error {
 	return nil
 }
 
-func (self *Api) parseTask(line string, line_number int) error {
-	data, err := self.parseLine(line, line_number, 5)
+func (self *Process) parseTask(line string, line_number int) error {
+	data, err := Util.ParseLine(line, line_number, 5)
 	if err != nil { return err }
 
 	var date Date = self.dates[data[0]]
@@ -123,8 +93,8 @@ func (self *Api) parseTask(line string, line_number int) error {
 	return nil
 }
 
-func (self *Api) parseClockOut(line string, line_number int) error {
-	data, err := self.parseLine(line, line_number, 3)
+func (self *Process) parseClockOut(line string, line_number int) error {
+	data, err := Util.ParseLine(line, line_number, 3)
 	if err != nil { return err }
 
 	// Set clock_out
@@ -142,7 +112,7 @@ func (self *Api) parseClockOut(line string, line_number int) error {
 	return nil
 }
 
-func (self *Api) callApi(date string, from_time string, to_time string, item_id string, description string) error {
+func (self *Process) callApi(date string, from_time string, to_time string, item_id string, description string) error {
 	fmt.Println("API |" + date + "|" + from_time + "|" + to_time + "|" + item_id + "|" + description)
 
 	// parse line

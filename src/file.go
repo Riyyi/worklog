@@ -3,7 +3,11 @@ package src
 import "bufio"
 import "os"
 
-func Parse(path string, job func(line string, line_number int) string) {
+var File file
+
+type file struct {}
+
+func (file) Parse(path string, job func(line string, line_number int) string, overwrite bool) {
 	// Input file
 	file, err := os.Open(path)
     assert(err)
@@ -11,11 +15,14 @@ func Parse(path string, job func(line string, line_number int) string) {
     var scanner *bufio.Scanner = bufio.NewScanner(file)
 
 	// Output file
-    output_file, err := os.Create(path + ".tmp")
-	assert(err)
-    defer output_file.Close()
-	var writer *bufio.Writer = bufio.NewWriter(output_file)
-    defer writer.Flush()
+	var writer *bufio.Writer
+	if overwrite {
+		output_file, err := os.Create(path + ".tmp")
+		assert(err)
+		defer output_file.Close()
+		writer = bufio.NewWriter(output_file)
+		defer writer.Flush()
+	}
 
 	var line string
 	var line_number int = 1
@@ -25,8 +32,10 @@ func Parse(path string, job func(line string, line_number int) string) {
 		line_number++
 
 		// Write line to output_file
-		_, err := writer.WriteString(line + "\n")
-		assert(err)
+		if writer != nil {
+			_, err := writer.WriteString(line + "\n")
+			assert(err)
+		}
     }
 
 	// Detect table if it was at the end of the file
@@ -35,7 +44,7 @@ func Parse(path string, job func(line string, line_number int) string) {
 	err = scanner.Err()
 	assert(err)
 
-	// move file
+	// TODO: move file
 }
 
 // - [v] while looping, start writing a new file, .tmp, Q: write per line or per chunk? how big are the chunks?

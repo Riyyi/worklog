@@ -1,0 +1,21 @@
+* Worklog
+
+Register worklog entries to the Jira API.
+
+* Download
+
+** Clone
+
+#+BEGIN_SRC sh
+$ git clone https://github.com/riyyi/worklog
+#+END_SRC
+
+* Build instructions
+
+#+BEGIN_SRC sh
+$ go build
+#+END_SRC
+
+* Gitignore
+
+git update-index --assume-unchanged src/secrets.go

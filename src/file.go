@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2024 Riyyi
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 package src
 
 import "bufio"
@@ -44,12 +50,6 @@ func (file) Parse(path string, job func(line string, line_number int) string, ov
 	err = scanner.Err()
 	assert(err)
 
-	// TODO: move file
+	err = os.Rename(path + ".tmp", path)
+	assert(err)
 }
-
-// - [v] while looping, start writing a new file, .tmp, Q: write per line or per chunk? how big are the chunks?
-// - [v] mark table start with processed mark
-// - [ ] on table end, call into REST API
-// - [ ] if true, continue
-// - [ ] if false, delete .tmp file, panic
-// - [ ] if no errors, overwrite file with .tmp file

@@ -1,8 +1,15 @@
+/*
+ * Copyright (C) 2024 Riyyi
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 package src
 
-import "errors"
-import "fmt"
-import "regexp"
+import (
+	"errors"
+	"regexp"
+)
 
 type Date struct {
 	clock_in string
@@ -18,6 +25,7 @@ type Process struct {
 	clock_in *regexp.Regexp
 	task_line *regexp.Regexp
 	clock_out *regexp.Regexp
+	mark_processed *regexp.Regexp
 	dates map[string]Date
 }
 
@@ -27,6 +35,7 @@ func MakeProcess() Process {
 		clock_in: Util.CompileRegex(`^\s*\|\s+[0-9]{4}-[0-9]{2}-[0-9]{2}\s+\|\s+IN\s+\|`),
 		task_line: Util.CompileRegex(`^\s*\|\s+[0-9]{4}-[0-9]{2}-[0-9]{2}\s+\|\s+[0-9]{2}:[0-9]{2}\s+\|`),
 		clock_out: Util.CompileRegex(`^\s*\|\s+[0-9]{4}-[0-9]{2}-[0-9]{2}\s+\|\s+OUT\s+\|`),
+		mark_processed: Util.CompileRegex(`\|\s+X\s+\|`),
 		dates: make(map[string]Date),
 	}
 }
@@ -37,12 +46,15 @@ func (self *Process) Process(line string, line_number int) string {
 		err = self.parseClockIn(line, line_number)
 	} else if self.task_line.MatchString(line) {
 		err = self.parseTask(line, line_number)
+		// This marks the current task line as "processed",
+		// even though we do the API call on the previous task each iteration.
+		// When an error occurs, you should take this into account!
+		line = self.mark_processed.ReplaceAllString(line, "| V |")
 	} else if self.clock_out.MatchString(line) {
 		err = self.parseClockOut(line, line_number)
 	}
 	assert(err)
 
-	// fmt.Println(line)
 	return line
 }
 
@@ -73,7 +85,7 @@ func (self *Process) parseTask(line string, line_number int) error {
 
 	// Call API for the previous task
 	if date.last_time != "" && date.last_item_id != "" && date.last_description != "" {
-		err = self.callApi(data[0], date.last_time, data[1], date.last_item_id, date.last_description)
+		err = Api.CallApi(data[0], date.last_time, data[1], date.last_item_id, date.last_description)
 	}
 
 	if err != nil { return err }
@@ -107,17 +119,7 @@ func (self *Process) parseClockOut(line string, line_number int) error {
 	}
 
 	// Call API for last task of the day
-	self.callApi(data[0], date.last_time, date.clock_out, date.last_item_id, date.last_description)
-
-	return nil
-}
-
-func (self *Process) callApi(date string, from_time string, to_time string, item_id string, description string) error {
-	fmt.Println("API |" + date + "|" + from_time + "|" + to_time + "|" + item_id + "|" + description)
-
-	// parse line
-	// call API
-	// error checking
+	Api.CallApi(data[0], date.last_time, date.clock_out, date.last_item_id, date.last_description)
 
 	return nil
 }

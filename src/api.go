@@ -24,6 +24,10 @@ type api struct {}
 func (api) CallApi(date string, from_time string, to_time string, item_id string, description string) error {
 	if item_id == "break" || item_id == "lunch" || item_id == "pauze" { return nil }
 
+	if date == "" || from_time == "" || to_time == "" || item_id == "" {
+		return fmt.Error("incomplete log entry: %s, %s-%s, %s, %s", date, from_time, to_time, item_id, description)
+	}
+
 	time1, err := time.Parse("15:04", from_time)
 	if err != nil { return fmt.Errorf("error parsing from_time: %s", err) }
 

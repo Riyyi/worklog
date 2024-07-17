@@ -84,7 +84,7 @@ func (self *Process) parseTask(line string, line_number int) error {
 	}
 
 	// Call API for the previous task
-	if date.last_time != "" && date.last_item_id != "" && date.last_description != "" {
+	if date.last_time != "" && date.last_item_id != "" {
 		err = Api.CallApi(data[0], date.last_time, data[1], date.last_item_id, date.last_description)
 	}
 

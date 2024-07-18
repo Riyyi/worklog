@@ -19,6 +19,7 @@ type Date struct {
 	last_time string
 	last_item_id string
 	last_description string
+	last_was_processed bool
 }
 
 type Process struct {
@@ -84,7 +85,7 @@ func (self *Process) parseTask(line string, line_number int) error {
 	}
 
 	// Call API for the previous task
-	if date.last_time != "" && date.last_item_id != "" {
+	if !date.last_was_processed && date.last_time != "" && date.last_item_id != "" {
 		err = Api.CallApi(data[0], date.last_time, data[1], date.last_item_id, date.last_description)
 	}
 
@@ -95,10 +96,12 @@ func (self *Process) parseTask(line string, line_number int) error {
 		date.last_time = data[1]
 		date.last_item_id = data[2]
 		date.last_description = data[4]
+		date.last_was_processed = false
 	} else { // "V", task is already processed
 		date.last_time = ""
 		date.last_item_id = ""
 		date.last_description = ""
+		date.last_was_processed = true
 	}
 	self.dates[data[0]] = date
 
@@ -114,7 +117,7 @@ func (self *Process) parseClockOut(line string, line_number int) error {
 	date.clock_out = data[2]
 	self.dates[data[0]] = date
 
-	if date.last_time == "" || date.last_item_id == "" || date.last_description == "" {
+	if !date.last_was_processed && date.last_time == "" || date.last_item_id == "" {
 		return errors.New("no previous task to use clock-out on")
 	}
 

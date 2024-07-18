@@ -25,7 +25,7 @@ func (api) CallApi(date string, from_time string, to_time string, item_id string
 	if item_id == "break" || item_id == "lunch" || item_id == "pauze" { return nil }
 
 	if date == "" || from_time == "" || to_time == "" || item_id == "" {
-		return fmt.Error("incomplete log entry: %s, %s-%s, %s, %s", date, from_time, to_time, item_id, description)
+		return fmt.Errorf("incomplete log entry: %s, %s-%s, %s, %s", date, from_time, to_time, item_id, description)
 	}
 
 	time1, err := time.Parse("15:04", from_time)
@@ -33,6 +33,11 @@ func (api) CallApi(date string, from_time string, to_time string, item_id string
 
 	time2, err := time.Parse("15:04", to_time)
 	if err != nil { return fmt.Errorf("error parsing to_time: %s", err) }
+
+	// Convert local timezone to UTC time
+	_, offset := time.Now().Zone()
+	time1.Add(-time.Duration(offset) * time.Second);
+	time2.Add(-time.Duration(offset) * time.Second);
 
 	duration := time2.Sub(time1)
 	seconds := int(duration.Seconds())

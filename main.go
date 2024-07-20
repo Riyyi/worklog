@@ -25,7 +25,9 @@ import (
 type Args struct {
 	Decl string   `arg:"-d,--decl" help:"Generate travel declaration table" placeholder:"MONTH"`
 	Process bool  `arg:"-p,--process" help:"Process specified file and call Jira API"`
-	File string   `arg:"positional,required" help:"the worklog file to process"`
+	Issues bool   `arg:"-i,--issues" help:"Store issues in specified file"`
+	// -------------------------------------
+	File string   `arg:"positional,required" help:"the file to perform the action on"`
 }
 
 func (Args) Description() string {
@@ -68,5 +70,10 @@ func main() {
 		}
 		src.File.Parse(args.File, job, false)
 		fmt.Println(decl.Result())
+	}
+
+	if args.Issues {
+		var issues src.IssueData = src.MakeIssueData()
+		issues.GenerateIssuesFile(args.File)
 	}
 }

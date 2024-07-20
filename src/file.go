@@ -38,7 +38,7 @@ func (file) Parse(path string, job func(line string, line_number int) string, ov
 		line_number++
 
 		// Write line to output_file
-		if writer != nil {
+		if overwrite && writer != nil {
 			_, err := writer.WriteString(line + "\n")
 			assert(err)
 		}
@@ -50,6 +50,8 @@ func (file) Parse(path string, job func(line string, line_number int) string, ov
 	err = scanner.Err()
 	assert(err)
 
-	err = os.Rename(path + ".tmp", path)
-	assert(err)
+	if overwrite {
+		err = os.Rename(path + ".tmp", path)
+		assert(err)
+	}
 }

@@ -1,21 +1,45 @@
-* Worklog
+#+TITLE: Worklog
+#+AUTHOR: Riyyi
+#+LANGUAGE: en
+#+OPTIONS: toc:nil
 
 Register worklog entries to the Jira API.
 
-* Download
+** Getting started
 
-** Clone
+*** Clone
 
 #+BEGIN_SRC sh
 $ git clone https://github.com/riyyi/worklog
 #+END_SRC
 
-* Build instructions
+*** Build instructions
 
 #+BEGIN_SRC sh
 $ go build
 #+END_SRC
 
-* Gitignore
+*** Usage
 
-git update-index --assume-unchanged src/secrets.go
+#+BEGIN_SRC sh
+$ worklog --help
+worklog - process a worklog file
+
+Usage: worklog [--decl MONTH] [--process] [--issues] FILE
+
+Positional arguments:
+  FILE                   the file to perform the action on
+
+Options:
+  --decl MONTH, -d MONTH
+                         Generate travel declaration table
+  --process, -p          Process specified file and call Jira API
+  --issues, -i           Store issues in specified file
+  --help, -h             display this help and exit
+#+END_SRC
+
+** Gitignore
+
+#+BEGIN_SRC sh
+$ git update-index --assume-unchanged src/secrets.go
+#+END_SRC

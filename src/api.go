@@ -17,22 +17,29 @@ var Api api
 type api struct {}
 
 func (api) CallApi(date string, fromTime string, toTime string, itemID string, description string) error {
-	if itemID == "break" || itemID == "lunch" || itemID == "pauze" { return nil }
+	if itemID == "break" || itemID == "lunch" || itemID == "pauze" || itemID == "T1-break" || itemID == "T1-lunch" || itemID == "T1-pauze" { return nil }
 
 	if date == "" || fromTime == "" || toTime == "" || itemID == "" {
 		return fmt.Errorf("incomplete log entry: %s, %s-%s, %s, %s", date, fromTime, toTime, itemID, description)
 	}
 
-	time1, err := time.Parse("15:04", fromTime)
+	const layout = "2006-01-02 15:04:05"
+	timestamp1 := date + " " + fromTime + ":00"
+	timestamp2 := date + " " + toTime + ":00"
+
+	location, err := time.LoadLocation("Local")
+	if err != nil {
+		return fmt.Errorf("error loading location: %s", err)
+	}
+
+	time1, err := time.ParseInLocation(layout, timestamp1, location)
 	if err != nil { return fmt.Errorf("error parsing from_time: %s", err) }
 
-	time2, err := time.Parse("15:04", toTime)
+	time2, err := time.ParseInLocation(layout, timestamp2, location)
 	if err != nil { return fmt.Errorf("error parsing to_time: %s", err) }
 
 	// Convert local timezone to UTC time
-	_, offset := time.Now().Zone()
-	time1.Add(-time.Duration(offset) * time.Second);
-	time2.Add(-time.Duration(offset) * time.Second);
+	time1UTC := time1.UTC()
 
 	duration := time2.Sub(time1)
 	seconds := int(duration.Seconds())
@@ -42,7 +49,8 @@ func (api) CallApi(date string, fromTime string, toTime string, itemID string, d
 
     data := map[string]string{
 		"comment": description,
-		"started": fmt.Sprintf("%sT%s:00.000+0000", date, fromTime), // "2021-01-17T12:34:00.000+0000",
+		"started": fmt.Sprintf("%s:00.000+0000",
+			time1UTC.Format("2006-01-02T15:04")), // "2021-01-17T12:34:00.000+0000",
 		"timeSpentSeconds": strconv.Itoa(seconds),
     }
 

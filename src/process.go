@@ -92,7 +92,7 @@ func (self *Process) parseTask(line string, line_number int) error {
 	if err != nil { return err }
 
 	// Set last_time, last_item_id, description
-	if data[3] == "X" {
+	if data[3] == "X" || data[3] == "x" {
 		date.last_time = data[1]
 		date.last_item_id = data[2]
 		date.last_description = data[4]

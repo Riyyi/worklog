@@ -22,7 +22,11 @@ func (self *IssueData) GenerateIssuesFile(path string) {
 	verify(filepath.Base(path) != "worklog.org", "protected from overwriting worklog file!")
 
 	// Get all issues of the active sprint, and its subtasks
-	self.fetchIssues(0)
+	err := self.fetchIssues("")
+	if err != nil {
+		fmt.Println("error fetching issues:", err)
+		return
+	}
 
 	// Store the issues
 	outputFile, err := os.Create(path)
@@ -39,10 +43,9 @@ func (self *IssueData) GenerateIssuesFile(path string) {
 // -----------------------------------------
 
 type issuesResponse struct {
-	StartAt    int              `json:"startAt"`
-	MaxResults int              `json:"maxResults"`
-	Total      int              `json:"total"`
-	Issues     []issueResponse  `json:"issues"`
+	Issues        []issueResponse  `json:"issues"`
+	NextPageToken string           `json:"nextPageToken"`
+	IsLast        bool             `json:"isLast"`
 }
 
 type issueResponse struct {
@@ -66,15 +69,17 @@ type subTaskFieldsResponse struct {
 
 // -----------------------------------------
 
-func (self *IssueData) fetchIssues(startAt int) error {
-	var url string = baseUrl + "/rest/api/2/search"
+func (self *IssueData) fetchIssues(pageToken string) error {
+	var url string = baseUrl + "/rest/api/3/search/jql"
 	var maxResults int = 100
-    data := map[string]interface{}{
+	data := map[string]interface{}{
 		"fields": []string{ "key", "summary", "subtasks" },
 		"jql": `project = "` + projectName + `" AND sprint IN openSprints() AND issuetype != "Sub-task" ORDER BY created ASC`,
 		"maxResults": maxResults,
-		"startAt": startAt,
-    }
+	}
+	if pageToken != "" {
+		data["nextPageToken"] = pageToken
+	}
 
 	body, err := Request(url, data, 200) // "OK"
 	if err != nil { return err }
@@ -87,8 +92,8 @@ func (self *IssueData) fetchIssues(startAt int) error {
 	self.totalIssues = append(self.totalIssues, result.Issues...)
 
 	// Pagination, if more results
-	if startAt + maxResults < result.Total  {
-		self.fetchIssues(startAt + maxResults)
+	if !result.IsLast && result.NextPageToken != "" {
+		return self.fetchIssues(result.NextPageToken)
 	}
 
 	return nil

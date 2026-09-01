@@ -9,6 +9,7 @@ package src
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -17,7 +18,7 @@ var Api api
 type api struct {}
 
 func (api) CallApi(date string, fromTime string, toTime string, itemID string, description string) error {
-	if itemID == "break" || itemID == "lunch" || itemID == "pauze" || itemID == "T1-break" || itemID == "T1-lunch" || itemID == "T1-pauze" { return nil }
+	if strings.Contains(itemID, "break") || strings.Contains(itemID, "lunch") || strings.Contains(itemID, "pauze") { return nil }
 
 	if date == "" || fromTime == "" || toTime == "" || itemID == "" {
 		return fmt.Errorf("incomplete log entry: %s, %s-%s, %s, %s", date, fromTime, toTime, itemID, description)
